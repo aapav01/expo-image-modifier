@@ -1,0 +1,39 @@
+{
+  "name": "expo-image-modifier",
+  "version": "0.0.3",
+  "description": "Expo Libary to Modify Images",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "expo": "~52.0.0",
+    "expo-file-system": "^18.0.12",
+    "expo-gl": "~12.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "image",
+    "modifier",
+    "opengl",
+    "graphics",
+    "expo-image-modifier"
+  ],
+  "homepage": "https://github.com/aapav01/expo-image-modifier#readme",
+  "bugs": {
+    "url": "https://github.com/aapav01/expo-image-modifier/issues"
+  },
+  "repository": {
+    "url": "https://github.com/aapav01/expo-image-modifier.git"
+  },
+  "license": "MIT",
+  "author": "Apavayan Sinha <info@apavayan.com>"
+}
