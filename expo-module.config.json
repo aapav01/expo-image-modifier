@@ -1,0 +1,17 @@
+{
+  "platforms": [
+    "apple",
+    "android",
+    "web"
+  ],
+  "apple": {
+    "modules": [
+      "ExpoImageModifierModule"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.imagemodifier.ExpoImageModifierModule"
+    ]
+  }
+}
