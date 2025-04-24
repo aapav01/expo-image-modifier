@@ -1,6 +1,6 @@
-import { NativeModule, requireNativeModule } from 'expo';
+import { NativeModule, requireNativeModule } from "expo";
 
-import { ExpoImageModifierModuleEvents } from './ExpoImageModifier.types';
+import { ExpoImageModifierModuleEvents } from "./ExpoImageModifier.types";
 
 declare class ExpoImageModifierModule extends NativeModule<ExpoImageModifierModuleEvents> {
   PI: number;
@@ -9,4 +9,6 @@ declare class ExpoImageModifierModule extends NativeModule<ExpoImageModifierModu
 }
 
 // This call loads the native module object from the JSI.
-export default requireNativeModule<ExpoImageModifierModule>('ExpoImageModifier');
+export default requireNativeModule<ExpoImageModifierModule>(
+  "ExpoImageModifier",
+);

@@ -1,9 +1,9 @@
-import { useEvent } from 'expo';
-import ExpoImageModifier, { ExpoImageModifierView } from 'expo-image-modifier';
-import { Button, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { useEvent } from "expo";
+import ExpoImageModifier from "expo-image-modifier";
+import { Button, SafeAreaView, ScrollView, Text, View } from "react-native";
 
 export default function App() {
-  const onChangePayload = useEvent(ExpoImageModifier, 'onChange');
+  const onChangePayload = useEvent(ExpoImageModifier, "onChange");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -19,19 +19,12 @@ export default function App() {
           <Button
             title="Set value"
             onPress={async () => {
-              await ExpoImageModifier.setValueAsync('Hello from JS!');
+              await ExpoImageModifier.setValueAsync("Hello from JS!");
             }}
           />
         </Group>
         <Group name="Events">
           <Text>{onChangePayload?.value}</Text>
-        </Group>
-        <Group name="Views">
-          <ExpoImageModifierView
-            url="https://www.example.com"
-            onLoad={({ nativeEvent: { url } }) => console.log(`Loaded: ${url}`)}
-            style={styles.view}
-          />
         </Group>
       </ScrollView>
     </SafeAreaView>
@@ -58,13 +51,13 @@ const styles = {
   },
   group: {
     margin: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 20,
   },
   container: {
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
   view: {
     flex: 1,
