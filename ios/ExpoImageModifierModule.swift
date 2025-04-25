@@ -3,15 +3,37 @@ import UIKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import MapKit
+import os.log
 
 public class ExpoImageModifierModule: Module {
+  private var isDebugMode = false
+  private let logger = Logger(subsystem: "com.expo.imagemodifier", category: "ExpoImageModifier")
+
   public func definition() -> ModuleDefinition {
     Name("ExpoImageModifier")
 
+    Function("setDebugMode") { (enabled: Bool) in
+      isDebugMode = enabled
+      if isDebugMode {
+        logger.debug("Debug mode enabled")
+      }
+    }
+
     AsyncFunction("modifyImage") { (options: [String: Any]) -> [String: Any] in
+      if isDebugMode {
+        logger.debug("Starting image modification with options: \(options)")
+      }
+
       guard let source = options["source"] as? [String: Any],
             let image = try await loadImage(from: source) else {
+        if isDebugMode {
+          logger.error("Invalid source provided")
+        }
         throw ImageModifierError.invalidSource
+      }
+
+      if isDebugMode {
+        logger.debug("Source image loaded: \(image.size.width)x\(image.size.height)")
       }
 
       var modifiedImage = image
@@ -19,6 +41,9 @@ public class ExpoImageModifierModule: Module {
       if let overlays = options["overlays"] as? [String: Any] {
         // Apply text overlays
         if let textOverlays = overlays["text"] as? [[String: Any]] {
+          if isDebugMode {
+            logger.debug("Applying \(textOverlays.count) text overlays")
+          }
           for textOverlay in textOverlays {
             modifiedImage = try await applyTextOverlay(textOverlay, to: modifiedImage)
           }
@@ -26,6 +51,9 @@ public class ExpoImageModifierModule: Module {
         
         // Apply image overlays
         if let imageOverlays = overlays["images"] as? [[String: Any]] {
+          if isDebugMode {
+            logger.debug("Applying \(imageOverlays.count) image overlays")
+          }
           for imageOverlay in imageOverlays {
             modifiedImage = try await applyImageOverlay(imageOverlay, to: modifiedImage)
           }
@@ -33,6 +61,9 @@ public class ExpoImageModifierModule: Module {
 
         // Apply map overlays
         if let mapOverlays = overlays["maps"] as? [[String: Any]] {
+          if isDebugMode {
+            logger.debug("Applying \(mapOverlays.count) map overlays")
+          }
           for mapOverlay in mapOverlays {
             modifiedImage = try await applyMapOverlay(mapOverlay, to: modifiedImage)
           }
@@ -42,12 +73,27 @@ public class ExpoImageModifierModule: Module {
       let outputFormat = options["outputFormat"] as? String ?? "jpeg"
       let quality = options["quality"] as? Double ?? 0.92
       
+      if isDebugMode {
+        logger.debug("Saving image with format: \(outputFormat), quality: \(quality)")
+      }
+      
       return try await saveImage(modifiedImage, format: outputFormat, quality: quality)
     }
 
     AsyncFunction("loadImage") { (source: [String: Any]) -> [String: Any] in
+      if isDebugMode {
+        logger.debug("Loading image from source: \(source)")
+      }
+      
       guard let image = try await loadImage(from: source) else {
+        if isDebugMode {
+          logger.error("Failed to load image from source")
+        }
         throw ImageModifierError.invalidSource
+      }
+      
+      if isDebugMode {
+        logger.debug("Image loaded successfully: \(image.size.width)x\(image.size.height)")
       }
       
       return [
@@ -61,18 +107,30 @@ public class ExpoImageModifierModule: Module {
   private func loadImage(from source: [String: Any]) async throws -> UIImage? {
     if let uri = source["uri"] as? String,
        let url = URL(string: uri) {
+      if isDebugMode {
+        logger.debug("Loading image from URL: \(url)")
+      }
       let (data, _) = try await URLSession.shared.data(from: url)
       return UIImage(data: data)
     } else if let base64 = source["base64"] as? String,
               let data = Data(base64Encoded: base64) {
+      if isDebugMode {
+        logger.debug("Loading image from base64 string")
+      }
       return UIImage(data: data)
     } else if let localPath = source["localPath"] as? String {
+      if isDebugMode {
+        logger.debug("Loading image from local path: \(localPath)")
+      }
       return UIImage(contentsOfFile: localPath)
     }
     return nil
   }
 
   private func applyTextOverlay(_ overlay: [String: Any], to image: UIImage) async throws -> UIImage {
+    if isDebugMode {
+      logger.debug("Applying text overlay: \(overlay)")
+    }
     let text = overlay["text"] as? String ?? ""
     let position = overlay["position"] as? [String: Double] ?? [:]
     let style = overlay["style"] as? [String: Any] ?? [:]
@@ -115,6 +173,9 @@ public class ExpoImageModifierModule: Module {
   }
 
   private func applyImageOverlay(_ overlay: [String: Any], to image: UIImage) async throws -> UIImage {
+    if isDebugMode {
+      logger.debug("Applying image overlay: \(overlay)")
+    }
     guard let source = overlay["source"] as? [String: Any],
           let overlayImage = try await loadImage(from: source) else {
       throw ImageModifierError.invalidOverlaySource
@@ -157,6 +218,9 @@ public class ExpoImageModifierModule: Module {
   }
 
   private func applyMapOverlay(_ overlay: [String: Any], to image: UIImage) async throws -> UIImage {
+    if isDebugMode {
+      logger.debug("Applying map overlay: \(overlay)")
+    }
     let coordinates = overlay["coordinates"] as? [String: Double] ?? [:]
     let style = overlay["style"] as? [String: Any] ?? [:]
     let markers = overlay["markers"] as? [[String: Any]] ?? []
@@ -251,9 +315,17 @@ public class ExpoImageModifierModule: Module {
   }
 
   private func saveImage(_ image: UIImage, format: String, quality: Double) async throws -> [String: Any] {
+    if isDebugMode {
+      logger.debug("Saving image with format: \(format), quality: \(quality)")
+    }
+    
     let tempDir = FileManager.default.temporaryDirectory
     let fileName = "\(UUID().uuidString).\(format)"
     let fileURL = tempDir.appendingPathComponent(fileName)
+
+    if isDebugMode {
+      logger.debug("Saving to file: \(fileURL.path)")
+    }
 
     let imageData: Data?
     if format.lowercased() == "png" {
@@ -263,10 +335,17 @@ public class ExpoImageModifierModule: Module {
     }
 
     guard let data = imageData else {
+      if isDebugMode {
+        logger.error("Failed to generate image data")
+      }
       throw ImageModifierError.failedToSave
     }
 
     try data.write(to: fileURL)
+
+    if isDebugMode {
+      logger.debug("Image saved successfully")
+    }
 
     return [
       "uri": fileURL.absoluteString,

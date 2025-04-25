@@ -29,21 +29,40 @@ import com.google.android.gms.maps.MapView
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import android.util.Log
 
 class ExpoImageModifierModule : Module() {
   private val executor = Executors.newSingleThreadExecutor()
   private val context: Context
     get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+  private var isDebugMode = false
 
   override fun definition() = ModuleDefinition {
     Name("ExpoImageModifier")
 
+    Function("setDebugMode") { enabled: Boolean ->
+      isDebugMode = enabled
+      Log.d("ExpoImageModifier", "Debug mode ${if (enabled) "enabled" else "disabled"}")
+    }
+
     AsyncFunction("modifyImage") { options: Map<String, Any> ->
       withContext(Dispatchers.IO) {
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Starting image modification with options: $options")
+        }
+
         val source = options["source"] as? Map<String, Any>
           ?: throw IllegalArgumentException("Source is required")
         
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Loading source image: $source")
+        }
+        
         val bitmap = loadImage(source)
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Source image loaded: ${bitmap.width}x${bitmap.height}")
+        }
+        
         var modifiedBitmap = bitmap.copy(bitmap.config, true)
         
         val overlays = options["overlays"] as? Map<String, Any>
@@ -51,6 +70,9 @@ class ExpoImageModifierModule : Module() {
           // Apply text overlays
           val textOverlays = overlays["text"] as? List<Map<String, Any>>
           if (textOverlays != null) {
+            if (isDebugMode) {
+              Log.d("ExpoImageModifier", "Applying ${textOverlays.size} text overlays")
+            }
             for (overlay in textOverlays) {
               modifiedBitmap = applyTextOverlay(overlay, modifiedBitmap)
             }
@@ -59,6 +81,9 @@ class ExpoImageModifierModule : Module() {
           // Apply image overlays
           val imageOverlays = overlays["images"] as? List<Map<String, Any>>
           if (imageOverlays != null) {
+            if (isDebugMode) {
+              Log.d("ExpoImageModifier", "Applying ${imageOverlays.size} image overlays")
+            }
             for (overlay in imageOverlays) {
               modifiedBitmap = applyImageOverlay(overlay, modifiedBitmap)
             }
@@ -67,6 +92,9 @@ class ExpoImageModifierModule : Module() {
           // Apply map overlays
           val mapOverlays = overlays["maps"] as? List<Map<String, Any>>
           if (mapOverlays != null) {
+            if (isDebugMode) {
+              Log.d("ExpoImageModifier", "Applying ${mapOverlays.size} map overlays")
+            }
             for (overlay in mapOverlays) {
               modifiedBitmap = applyMapOverlay(overlay, modifiedBitmap)
             }
@@ -76,13 +104,23 @@ class ExpoImageModifierModule : Module() {
         val outputFormat = options["outputFormat"] as? String ?: "jpeg"
         val quality = (options["quality"] as? Double ?: 0.92).toFloat()
         
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Saving image with format: $outputFormat, quality: $quality")
+        }
+        
         saveImage(modifiedBitmap, outputFormat, quality)
       }
     }
 
     AsyncFunction("loadImage") { source: Map<String, Any> ->
       withContext(Dispatchers.IO) {
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Loading image from source: $source")
+        }
         val bitmap = loadImage(source)
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Image loaded successfully: ${bitmap.width}x${bitmap.height}")
+        }
         mapOf(
           "uri" to (source["uri"] as? String ?: ""),
           "width" to bitmap.width,
@@ -96,6 +134,9 @@ class ExpoImageModifierModule : Module() {
     return when {
       source["uri"] != null -> {
         val uri = Uri.parse(source["uri"] as String)
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Loading image from URI: $uri")
+        }
         when (uri.scheme) {
           "http", "https" -> {
             val url = URL(uri.toString())
@@ -113,11 +154,17 @@ class ExpoImageModifierModule : Module() {
         }
       }
       source["base64"] != null -> {
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Loading image from base64 string")
+        }
         val base64 = source["base64"] as String
         val imageBytes = Base64.decode(base64, Base64.DEFAULT)
         BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
       }
       source["localPath"] != null -> {
+        if (isDebugMode) {
+          Log.d("ExpoImageModifier", "Loading image from local path: ${source["localPath"]}")
+        }
         BitmapFactory.decodeFile(source["localPath"] as String)
       }
       else -> throw IllegalArgumentException("Invalid image source")
@@ -125,6 +172,9 @@ class ExpoImageModifierModule : Module() {
   }
 
   private fun applyTextOverlay(overlay: Map<String, Any>, bitmap: Bitmap): Bitmap {
+    if (isDebugMode) {
+      Log.d("ExpoImageModifier", "Applying text overlay: $overlay")
+    }
     val text = overlay["text"] as? String ?: ""
     val position = overlay["position"] as? Map<String, Double> ?: emptyMap()
     val style = overlay["style"] as? Map<String, Any> ?: emptyMap()
@@ -167,6 +217,9 @@ class ExpoImageModifierModule : Module() {
   }
 
   private fun applyImageOverlay(overlay: Map<String, Any>, bitmap: Bitmap): Bitmap {
+    if (isDebugMode) {
+      Log.d("ExpoImageModifier", "Applying image overlay: $overlay")
+    }
     val source = overlay["source"] as? Map<String, Any>
       ?: throw IllegalArgumentException("Overlay source is required")
     
@@ -206,6 +259,9 @@ class ExpoImageModifierModule : Module() {
   }
 
   private suspend fun applyMapOverlay(overlay: Map<String, Any>, bitmap: Bitmap): Bitmap {
+    if (isDebugMode) {
+      Log.d("ExpoImageModifier", "Applying map overlay: $overlay")
+    }
     val coordinates = overlay["coordinates"] as? Map<String, Double> ?: emptyMap()
     val style = overlay["style"] as? Map<String, Any> ?: emptyMap()
     val markers = overlay["markers"] as? List<Map<String, Any>> ?: emptyList()
@@ -277,14 +333,25 @@ class ExpoImageModifierModule : Module() {
   }
 
   private fun saveImage(bitmap: Bitmap, format: String, quality: Float): Map<String, Any> {
+    if (isDebugMode) {
+      Log.d("ExpoImageModifier", "Saving image with format: $format, quality: $quality")
+    }
     val outputDir = context.cacheDir
     val outputFile = File.createTempFile("modified_image", ".$format", outputDir)
+    
+    if (isDebugMode) {
+      Log.d("ExpoImageModifier", "Saving to file: ${outputFile.absolutePath}")
+    }
     
     FileOutputStream(outputFile).use { out ->
       when (format.lowercase()) {
         "png" -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         else -> bitmap.compress(Bitmap.CompressFormat.JPEG, (quality * 100).toInt(), out)
       }
+    }
+
+    if (isDebugMode) {
+      Log.d("ExpoImageModifier", "Image saved successfully")
     }
 
     return mapOf(
@@ -298,6 +365,9 @@ class ExpoImageModifierModule : Module() {
     return try {
       Color.parseColor(colorString)
     } catch (e: IllegalArgumentException) {
+      if (isDebugMode) {
+        Log.e("ExpoImageModifier", "Failed to parse color: $colorString", e)
+      }
       Color.BLACK
     }
   }
