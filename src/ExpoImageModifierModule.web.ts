@@ -50,13 +50,13 @@ class ExpoImageModifierModuleWeb implements ExpoImageModifierModule {
               textOverlay.position.y - textMetrics.actualBoundingBoxAscent,
               textMetrics.width,
               textMetrics.actualBoundingBoxAscent +
-                textMetrics.actualBoundingBoxDescent
+                textMetrics.actualBoundingBoxDescent,
             );
           }
           ctx.fillText(
             textOverlay.text,
             textOverlay.position.x,
-            textOverlay.position.y
+            textOverlay.position.y,
           );
           ctx.restore();
         }
@@ -66,14 +66,14 @@ class ExpoImageModifierModuleWeb implements ExpoImageModifierModule {
       if (options.overlays.images) {
         for (const imageOverlay of options.overlays.images) {
           const overlayImg = await this.loadImageElement(
-            imageOverlay.source.uri!
+            imageOverlay.source.uri!,
           );
           ctx.save();
           ctx.globalAlpha = imageOverlay.opacity || 1;
           if (imageOverlay.rotation) {
             ctx.translate(
               imageOverlay.position.x + imageOverlay.size.width / 2,
-              imageOverlay.position.y + imageOverlay.size.height / 2
+              imageOverlay.position.y + imageOverlay.size.height / 2,
             );
             ctx.rotate((imageOverlay.rotation * Math.PI) / 180);
             ctx.drawImage(
@@ -81,7 +81,7 @@ class ExpoImageModifierModuleWeb implements ExpoImageModifierModule {
               -imageOverlay.size.width / 2,
               -imageOverlay.size.height / 2,
               imageOverlay.size.width,
-              imageOverlay.size.height
+              imageOverlay.size.height,
             );
           } else {
             ctx.drawImage(
@@ -89,7 +89,7 @@ class ExpoImageModifierModuleWeb implements ExpoImageModifierModule {
               imageOverlay.position.x,
               imageOverlay.position.y,
               imageOverlay.size.width,
-              imageOverlay.size.height
+              imageOverlay.size.height,
             );
           }
           ctx.restore();
@@ -120,7 +120,7 @@ class ExpoImageModifierModuleWeb implements ExpoImageModifierModule {
       };
     } else if (source.base64) {
       const img = await this.loadImageElement(
-        `data:image/jpeg;base64,${source.base64}`
+        `data:image/jpeg;base64,${source.base64}`,
       );
       return {
         uri: source.base64,

@@ -25,5 +25,5 @@ declare class ExpoImageModifierModule extends NativeModule {
 
 // This call loads the native module object from the JSI.
 export default requireNativeModule<ExpoImageModifierModule>(
-  "ExpoImageModifier"
+  "ExpoImageModifier",
 ) as ExpoImageModifierModuleType;
