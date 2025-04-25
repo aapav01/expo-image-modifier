@@ -6,14 +6,6 @@ import {
 } from "./ExpoImageModifier.types";
 
 class ExpoImageModifierModuleWeb implements ExpoImageModifierModule {
-  PI = Math.PI;
-  async setValueAsync(value: string): Promise<void> {
-    this.emit("onChange", { value });
-  }
-  hello() {
-    return "Hello world! 👋";
-  }
-
   async modifyImage(options: ModifyImageOptions): Promise<ModifiedImageResult> {
     // Create a canvas element
     const canvas = document.createElement("canvas");
